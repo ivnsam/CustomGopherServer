@@ -4,6 +4,7 @@ public class ServerConfig {
     private Boolean isDebug = false;
     private static String serverHost = "127.0.0.1";
     private static int serverPort = 70;
+    private static String serverHostname = "localhost";
     private static String serverMessage = "hello_text_web!";
     private static String serverHomeDir = Paths.get("").toAbsolutePath().toString();
     private static int serverDirMaxDepth = 3;
@@ -26,6 +27,14 @@ public class ServerConfig {
 
     public void setServerPort(int port) {
         serverPort = port;
+    }
+
+    public String getServerHostname() {
+        return serverHostname;
+    }
+
+    public void setServerHostname(String hostname) {
+        serverHostname = hostname;
     }
 
     public String getServerMessage() {
@@ -54,9 +63,7 @@ public class ServerConfig {
 
     ServerConfig() {
         Object isDebugRaw = System.getProperties().get("debug");
-        boolean isDebug = true
-                ? (isDebugRaw != null && (Boolean.valueOf(isDebugRaw.toString()) || isDebugRaw.toString().isEmpty()))
-                : false;
+        isDebug = isDebugRaw != null && (Boolean.valueOf(isDebugRaw.toString()) || isDebugRaw.toString().isEmpty());
         if (isDebug)
             System.out.println("DEBUG MODE IS HERE!!!");
     }

@@ -1,3 +1,4 @@
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -15,7 +16,10 @@ import java.util.stream.Collectors;
 
 public class App {
 
-    private static final String HTML_HEADERS = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n";
+    private static final String HTTP_HTML_HEADER = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n";
+    private static final String HTTP_RAW_FILE_HEADER = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream;\r\n\r\n";
+    private static final String HTML_PREFIX = "<html><body>";
+    private static final String HTML_POSTFIX = "</body></html>";
     private static ServerConfig configs;
 
     public static void main(String[] args) {
@@ -73,7 +77,7 @@ public class App {
         buffer.flip();
 
         String request = new String(buffer.array(), 0, bytesRead);
-        if (configs.isDebug()) 
+        if (configs.isDebug())
             System.out.println("Request: " + request.split("\n")[0]);
 
         ByteBuffer response;
@@ -84,6 +88,8 @@ public class App {
                 System.out.println(e.getClass() + ": " + e.getMessage());
             response = ByteBuffer.wrap("3Resource not found.".getBytes());
         }
+        if (configs.isDebug())
+            System.out.println("Response: \n" + StandardCharsets.UTF_8.decode(response.duplicate()) + "Response.");
         key.attach(response);
         key.interestOps(SelectionKey.OP_WRITE);
     }
@@ -93,7 +99,9 @@ public class App {
         ByteBuffer buffer = (ByteBuffer) key.attachment();
 
         if (buffer != null && buffer.hasRemaining()) {
-            client.write(buffer);
+            int sent = client.write(buffer);
+            if (configs.isDebug())
+                System.out.println("Sent: " + sent + "\nBuf size: " + buffer.capacity());
         } else {
             client.close();
         }
@@ -103,7 +111,25 @@ public class App {
         String[] requestByLines = request.split("\n");
         String responseString;
         if (requestByLines.length > 1 && requestByLines[0].contains("HTTP/")) {
-            responseString = HTML_HEADERS + configs.getServerMessage();
+            // responseString = HTTP_HTML_HEADER + configs.getServerMessage();
+            Path requestPath = Paths.get(
+                    configs.getServerHomeDir()
+                            + (requestByLines[0].split(" ")[1].startsWith("/") ? requestByLines[0].split(" ")[1]
+                                    : "/" + requestByLines[0].split(" ")[1]));
+            if (Files.isDirectory(requestPath)) {
+                responseString = Files.list(requestPath).map(p -> {
+                    p = Paths.get(configs.getServerHomeDir()).relativize(p);
+                    return "<a href=\"" + p.toString() + "\">" + p.getFileName() + "</a>";
+                }).collect(Collectors.joining("<br>"));
+                responseString = HTTP_HTML_HEADER + HTML_PREFIX + responseString + HTML_POSTFIX;
+            } else {
+                if (Files.size(requestPath) == 0)
+                    return ByteBuffer.wrap((HTTP_RAW_FILE_HEADER + " ").getBytes());
+                ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+                responseStream.write(HTTP_RAW_FILE_HEADER.getBytes());
+                responseStream.write(Files.readAllBytes(requestPath));
+                return ByteBuffer.wrap(responseStream.toByteArray());
+            }
         } else {
             Path requestPath = Paths.get(
                     configs.getServerHomeDir() + (requestByLines[0].trim().startsWith("/") ? requestByLines[0].trim()
@@ -137,7 +163,8 @@ public class App {
                                     + configs.getServerHost() + "\t" + configs.getServerPort();
                         }).collect(Collectors.joining("\n")) + "\n.";
             } else {
-                if (Files.size(requestPath) == 0) return ByteBuffer.wrap(" ".getBytes());
+                if (Files.size(requestPath) == 0)
+                    return ByteBuffer.wrap(" ".getBytes());
                 return ByteBuffer.wrap(Files.readAllBytes(requestPath));
             }
         }
