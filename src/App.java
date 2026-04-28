@@ -39,12 +39,14 @@ public class App {
             while (true) {
                 selector.select();
                 for (SelectionKey key : selector.selectedKeys()) {
-                    if (key.isAcceptable())
-                        accept(selector, serverSocket);
-                    if (key.isReadable())
-                        readRequest(key);
-                    if (key.isWritable())
-                        sendResponse(key);
+                    if (key.isValid()) {
+                        if (key.isAcceptable())
+                            accept(selector, serverSocket);
+                        if (key.isReadable())
+                            readRequest(key);
+                        if (key.isWritable())
+                            sendResponse(key);
+                    }
                 }
                 selector.selectedKeys().clear();
             }
