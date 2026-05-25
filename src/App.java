@@ -25,6 +25,7 @@ public class App {
     public static void main(String[] args) {
         System.out.println("CustomGopherServer.");
         configs = new ServerConfig();
+        configs.setServerHomeDir(args.length > 0 ? args[0] : "");
 
         try {
             ServerSocketChannel serverSocket = ServerSocketChannel.open();

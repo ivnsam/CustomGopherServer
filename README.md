@@ -14,6 +14,14 @@ javac src/*.java -d out
 
 ## Run
 
+- with content from current dir
+
 ```sh
 java -cp out App
+```
+
+- with content from external dir
+
+```sh
+java -cp out App external_dir_path
 ```

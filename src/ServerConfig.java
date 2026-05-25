@@ -2,8 +2,8 @@ import java.nio.file.Paths;
 
 public class ServerConfig {
     private Boolean isDebug = false;
-    private static String serverHost = "127.0.0.1";
-    private static int serverPort = 70;
+    private static String serverHost = "0.0.0.0";
+    private static int serverPort = 7070;
     private static String serverHostname = "localhost";
     private static String serverMessage = "hello_text_web!";
     private static String serverHomeDir = Paths.get("").toAbsolutePath().toString();
