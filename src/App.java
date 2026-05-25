@@ -25,7 +25,8 @@ public class App {
     public static void main(String[] args) {
         System.out.println("CustomGopherServer.");
         configs = new ServerConfig();
-        configs.setServerHomeDir(args.length > 0 ? args[0] : "");
+        configs.setServerHostname(System.getProperty("host", "127.0.0.1"));
+        configs.setServerHomeDir(System.getProperty("homedir", ""));
 
         try {
             ServerSocketChannel serverSocket = ServerSocketChannel.open();
@@ -163,7 +164,7 @@ public class App {
                             p = Paths.get(configs.getServerHomeDir()).relativize(p);
                             String pFileName = p.getFileName().toString();
                             return prefix + pFileName + '\t' + '/' + p.toString().replace('\\', '/') + "\t"
-                                    + configs.getServerHost() + "\t" + configs.getServerPort();
+                                    + configs.getServerHostname() + "\t" + configs.getServerPort();
                         }).collect(Collectors.joining("\n")) + "\n.";
             } else {
                 if (Files.size(requestPath) == 0)
