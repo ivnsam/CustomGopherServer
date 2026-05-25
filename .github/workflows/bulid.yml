@@ -2,7 +2,8 @@ name: build
 
 on:
   push:
-    branches: [ "main" ]
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -96,3 +97,39 @@ jobs:
         with:
           name: server-${{ matrix.runtime_os }}-${{ matrix.runtime_arch }}
           path: dist/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Linux x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: server-linux-x64
+          path: release-assets/linux-x64
+
+      - name: Download Windows x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: server-windows-x64
+          path: release-assets/windows-x64
+
+      - name: Download Linux ARM64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: server-linux-arm64
+          path: release-assets/linux-arm64
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/linux-x64/*
+            release-assets/windows-x64/*
+            release-assets/linux-arm64/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
