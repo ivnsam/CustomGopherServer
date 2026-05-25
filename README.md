@@ -25,3 +25,9 @@ java -cp out App
 ```sh
 java -cp out App external_dir_path
 ```
+
+## Run from releases
+
+```sh
+./runtime/bin/java -jar ./app.jar
+```
